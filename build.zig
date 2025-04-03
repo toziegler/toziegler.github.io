@@ -10,9 +10,8 @@ pub fn build(b: *std.Build) !void {
 
     std.debug.print("{s}\n", .{markdown_files});
     var lines = std.mem.tokenizeScalar(u8, markdown_files, '\n');
-    std.debug.print("test 1", .{});
     while (lines.next()) |file_path| {
-        std.debug.print("{s}", .{file_path});
+        std.debug.print("{s} \n", .{file_path});
         const markdown = b.path(file_path);
         const html = markdown2html(b, markdown);
 
@@ -23,11 +22,14 @@ pub fn build(b: *std.Build) !void {
 
         _ = website.addCopyFile(html, html_path);
     }
-    std.debug.print("222222", .{});
+    const index = b.path("./index.html");
+    _ = website.addCopyFile(index, "index.html");
+    const assets = b.path("assets");
+    _ = website.addCopyDirectory(assets, "assets", .{});
 
     b.installDirectory(.{
         .source_dir = website.getDirectory(),
-        .install_dir = .prefix,
+        .install_dir = .{ .custom = "../docs" },
         .install_subdir = ".",
     });
 }
@@ -36,11 +38,9 @@ fn markdown2html(
     b: *std.Build,
     markdown: std.Build.LazyPath,
 ) std.Build.LazyPath {
-    std.debug.print("test", .{});
     const pandoc_step = std.Build.Step.Run.create(b, "run pandoc");
-    pandoc_step.addArgs(&.{ "pandoc --from=markdown", "--to=html5" });
+    pandoc_step.addArgs(&.{ "pandoc", "-s", "--from=markdown", "--to=html5", "--css=assets/style.css", "--highlight-style=tango", "--template=assets/template.html" });
     pandoc_step.addFileArg(markdown);
-    std.debug.print("test \n", .{});
     return pandoc_step.captureStdOut();
 }
 

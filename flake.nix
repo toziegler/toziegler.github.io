@@ -22,6 +22,7 @@
           buildInputs = [
               linuxPackages.perf
               pkgs.pandoc
+              pkgs.sass
               pkgs.zigpkgs."0.13.0"
               zls.packages.${system}.default
           ];
