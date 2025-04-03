@@ -5,29 +5,25 @@ const cpu = builtin.cpu;
 const assert = std.debug.assert;
 
 pub fn build(b: *std.Build) !void {
-    const pandoc_dependency = if (os.tag == .linux and cpu.arch == .x86_64)
-        b.lazyDependency("pandoc_linux_amd64", .{}) orelse return
-    else if (os.tag == .macos and cpu.arch == .aarch64)
-        b.lazyDependency("pandoc_macos_arm64", .{}) orelse return
-    else
-        return error.UnsupportedHost;
-    const pandoc = pandoc_dependency.path("bin/pandoc");
-
     const website = b.addWriteFiles();
+    const markdown_files = b.run(&.{ "git", "ls-files", "contents/*.md" });
 
-    const markdown_files = b.run(&.{ "git", "ls-files", "content/*.md" });
+    std.debug.print("{s}\n", .{markdown_files});
     var lines = std.mem.tokenizeScalar(u8, markdown_files, '\n');
+    std.debug.print("test 1", .{});
     while (lines.next()) |file_path| {
+        std.debug.print("{s}", .{file_path});
         const markdown = b.path(file_path);
-        const html = markdown2html(b, pandoc, markdown);
+        const html = markdown2html(b, markdown);
 
         var html_path = file_path;
-        html_path = cut_prefix(html_path, "content/").?;
+        html_path = cut_prefix(html_path, "contents/").?;
         html_path = cut_suffix(html_path, ".md").?;
         html_path = b.fmt("{s}.html", .{html_path});
 
         _ = website.addCopyFile(html, html_path);
     }
+    std.debug.print("222222", .{});
 
     b.installDirectory(.{
         .source_dir = website.getDirectory(),
@@ -38,13 +34,13 @@ pub fn build(b: *std.Build) !void {
 
 fn markdown2html(
     b: *std.Build,
-    pandoc: std.Build.LazyPath,
     markdown: std.Build.LazyPath,
 ) std.Build.LazyPath {
+    std.debug.print("test", .{});
     const pandoc_step = std.Build.Step.Run.create(b, "run pandoc");
-    pandoc_step.addFileArg(pandoc);
-    pandoc_step.addArgs(&.{ "--from=markdown", "--to=html5" });
+    pandoc_step.addArgs(&.{ "pandoc --from=markdown", "--to=html5" });
     pandoc_step.addFileArg(markdown);
+    std.debug.print("test \n", .{});
     return pandoc_step.captureStdOut();
 }
 

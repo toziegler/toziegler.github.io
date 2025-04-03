@@ -21,8 +21,9 @@
       devShell.${system} = pkgs.mkShell {
           buildInputs = [
               linuxPackages.perf
-                  pkgs.zigpkgs."0.13.0"
-                  zls.packages.${system}.default
+              pkgs.pandoc
+              pkgs.zigpkgs."0.13.0"
+              zls.packages.${system}.default
           ];
 
           shellHook = ''
