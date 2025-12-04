@@ -7,6 +7,17 @@
   --hl-purple: #2b6cb0;
 }
 
+@media (prefers-color-scheme: dark) {
+  :root {
+    --hl-text: #e7eef7;
+    --hl-muted: #8aa2c0;
+    --hl-accent: #7cd8f7;
+    --hl-orange: #f0b673;
+    --hl-green: #7ddbb2;
+    --hl-purple: #b4c5ff;
+  }
+}
+
 code {
   color: var(--hl-text);
 }

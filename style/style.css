@@ -17,6 +17,21 @@
   --code-border: #d7ccbb;
 }
 
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg: #0b0f14;
+    --panel: #111927;
+    --text: #e7eef7;
+    --muted: #9aa9bf;
+    --border: #1f2a3b;
+    --accent: #7cd8f7;
+    --accent-ink: #b1ecff;
+    --code-bg: #0f1624;
+    --code-border: #1f2d44;
+  }
+}
+
 html {
   border-top: 5px solid var(--accent);
 }
