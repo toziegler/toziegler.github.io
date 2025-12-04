@@ -1,0 +1,31 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="64"
+  height="64"
+  viewBox="0 0 64 64"
+>
+  <!-- Background -->
+  <rect
+    x="4"
+    y="4"
+    width="56"
+    height="56"
+    rx="14"
+    ry="14"
+    fill="#064f55"
+  />
+
+  <!-- Letters "tz" -->
+  <text
+    x="50%"
+    y="50%"
+    fill="#ffffff"
+    font-size="30"
+    font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+    font-weight="700"
+    text-anchor="middle"
+    dominant-baseline="central"
+  >
+    tz
+  </text>
+</svg>

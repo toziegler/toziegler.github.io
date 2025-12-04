@@ -1,0 +1,49 @@
+:root {
+  --hl-text: #2d3748;
+  --hl-muted: #4a5568;
+  --hl-accent: #0d9488;
+  --hl-orange: #b7791f;
+  --hl-green: #2f855a;
+  --hl-purple: #2b6cb0;
+}
+
+code {
+  color: var(--hl-text);
+}
+
+pre code {
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+code .co {
+  color: var(--hl-muted);
+}
+
+code .kw,
+code .at,
+code .cf {
+  color: var(--hl-accent);
+}
+
+code .op {
+  color: var(--hl-orange);
+}
+
+code .dt {
+  color: var(--hl-purple);
+}
+
+code .st {
+  color: var(--hl-green);
+}
+
+code .dv,
+code .fl {
+  color: var(--hl-accent);
+}
+
+code .bu {
+  color: var(--hl-orange);
+}
