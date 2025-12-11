@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Quiet notes and links worth keeping.">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:description" content="Quiet notes and links worth keeping.">
+    <meta name="twitter:title" content="io_uring for Systems Engineers">
+    <meta name="twitter:image" content="/2025-12-08-io-uring/banner.webp">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="io_uring for Systems Engineers">
+    <meta property="og:image" content="/2025-12-08-io-uring/banner.webp">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="author" content="Tobias Ziegler">
+    <title id="title">io_uring for Systems Engineers</title>
+    <link rel="icon" type="image/svg+xml" href="/img/icon.svg">
+    <link rel="stylesheet" type="text/css" href="/style/style.css">
+    <link rel="stylesheet" type="text/css" href="/style/highlight.css">
+    <style>
+      @font-face {
+        font-family: 'Inter';
+        font-style: normal;
+        font-weight: 100 900;
+        src: url('/fonts/Inter-Regular.woff2') format('woff2');
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'Recursive';
+        font-style: normal;
+        font-weight: 300 1000;
+        src: url('/fonts/RecursiveMono.woff2') format('woff2');
+        font-display: swap;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="site-title" href="/">Home</a>
+    </header>
+    <main class="page">
+      <article id="blogpost">
+  <header>
+    <h1>io_uring for Systems Engineers</h1>
+    <time datetime="2025-12-08">Dec 8, 2025</time>
+  </header>
+  <div class="banner">
+    <div class="image-wrapper">
+      <img src="banner.webp" alt="io_uring for Systems Engineers">
+    </div>
+  </div>
+  <div class="content"><p>My former colleagues and I wrote a detailed <a
+href="https://arxiv.org/abs/2512.04859">paper</a><a href="#fn1"
+class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> to
+better understand io_uring. This post is a concise, high-level overview
+aimed at systems engineers: It should help you decide whether io_uring
+is worth integrating into your system.</p>
+<p>io_uring is a relatively new Linux kernel API for high-performance
+I/O. At its core, it is an asynchronous, batched system call
+interface.</p>
+<p>Let’s unpack that.</p>
+<h3 id="asynchronous"><a href="#asynchronous" class="anchor"
+aria-hidden="true">Asynchronous</a></h3>
+<p>At a high level, io_uring consists of two lock-free ring buffers
+shared between the user space and the kernel:</p>
+<ul>
+<li>the Submission Queue (SQ), where user space places requests.</li>
+<li>the Completion Queue (CQ), where the kernel places responses.</li>
+</ul>
+<p>The application issues requests by writing entries into the
+submission queue, and later collects results from the completion queue.
+This mechanism decouples issuing work from waiting for it to complete,
+allowing the application to perform other tasks while the kernel
+processes multiple operations in the background.</p>
+<h3 id="batching"><a href="#batching" class="anchor"
+aria-hidden="true">Batching</a></h3>
+<p>Batching is one of the main ways io_uring improves performance.
+Instead of making one system call (syscall) per operation, applications
+can queue many operations into the submission ring. Then, they can use a
+single syscall to instruct the kernel to process all operations in one
+go. This approach amortizes the syscall overhead over multiple
+operations, reducing context switches and syscall entry/exit costs. For
+workloads with many small operations, this can make a significant
+difference.</p>
+<h3 id="system-call-interface"><a href="#system-call-interface"
+class="anchor" aria-hidden="true">System call interface</a></h3>
+<p>io_uring serves as a unified interface for a wide range of
+operations, including file I/O, networking, timeouts, and other
+syscalls, such as madvise. This is an important difference compared to
+older, specialized interfaces. For example, libaio focuses solely on
+disk/block I/O, and epoll on network I/O. With io_uring, applications
+can use a single interface for various types of I/O, thereby avoiding
+the need to juggle multiple APIs for different subsystems.</p>
+<p>Now that we have a high-level understanding of <em>what</em> io_uring
+is, let us look at <em>when</em> it is useful.</p>
+<h2 id="when-to-use-io_uring"><a href="#when-to-use-io_uring"
+class="anchor" aria-hidden="true">When to use io_uring?</a></h2>
+<p>You might want to consider io_uring if:</p>
+<ul>
+<li>System calls are consuming a lot of CPU time. Profiling shows a
+noticeable percentage of cycles spent in syscall overhead or context
+switching. Most of io_uring’s benefit comes from amortizing CPU
+overhead, so if your profile shows a lot of time spent crossing the
+kernel boundary, it is a good candidate.</li>
+<li>Your workload is I/O-heavy (network or SSD) and latency-sensitive.
+You are pushing high IOPS or many small messages and need to squeeze
+more throughput out of the same hardware.</li>
+<li>You want a unified interface for different I/O types<a href="#fn2"
+class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>.
+Instead of mixing epoll, read/write, send/recv, and various asynchronous
+libraries, you would like a single, coherent API.</li>
+<li>You care about future kernel optimizations. Many new I/O-related
+features and optimizations are being developed with io_uring in mind,
+making it a more future-proof choice to adopt.</li>
+<li>You are memory-bandwidth-bound by I/O copies. io_uring features,
+such as registered buffers, can help reduce copy overhead in certain
+scenarios.</li>
+</ul>
+<p>You might not want to use it if:</p>
+<ul>
+<li>You do not benefit from asynchrony or batching. Your workload is
+simple, blocking, and latency is dominated by something other than
+syscalls (for example, waiting for a single disk read).</li>
+<li>You only perform one type of I/O and are already well served. For
+example, a disk-only workload where the performance of libaio is enough,
+or large, sequential reads/writes where syscall overhead is
+negligible.<a href="#fn3" class="footnote-ref" id="fnref3"
+role="doc-noteref"><sup>3</sup></a></li>
+<li>Portability is a hard requirement. io_uring is a Linux-specific
+feature that requires relatively recent kernels. If you need to support
+other OSes, Docker, or kernels older than 5.1, abstracting it or
+avoiding it might be simpler.</li>
+</ul>
+<p>In summary, our evaluation suggests that io_uring is the best option
+for new systems and is also worth considering for many existing ones, as
+illustrated by <a
+href="https://www.phoronix.com/news/PostgreSQL-Lands-IO_uring">PostgreSQL’s</a>
+recent adoption of io_uring.</p>
+<section id="footnotes" class="footnotes footnotes-end-of-document"
+role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p>Do not be afraid if you are not building a DBMS; the
+insights are applicable to many applications.<a href="#fnref1"
+class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p>This is a big reason, besides performance, why we at
+TigerBeetle like io_uring so much.<a href="#fnref2"
+class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p>A few percent can still be gained by using io_uring.<a
+href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+  </div>
+</article>
+<p style="text-align: center; font-size: 16px; color: #5c5f59">Enjoyed this?</p>
+<nav id="navigation-buttons">
+  
+  
+</nav>
+    </main>
+    <footer class="site-footer">
+      <div class="footer-meta">
+        <span>© Tobias Ziegler</span>
+      </div>
+    </footer>
+  </body>
+</html>
