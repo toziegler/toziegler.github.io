@@ -200,12 +200,43 @@ main.page {
 #blog-title {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
   margin-bottom: 18px;
+  align-items: flex-start;
 }
 
 #blog-title h1 {
   margin: 0;
+}
+
+.hero-row {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+@media (min-width: 640px) {
+  .hero-row {
+    flex-direction: row;
+    align-items: center;
+    gap: 18px;
+  }
+}
+
+.avatar-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-avatar {
+  width: clamp(96px, 22vw, 140px);
+  height: clamp(96px, 22vw, 140px);
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--panel);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+  background: var(--panel);
 }
 
 .title-block {
