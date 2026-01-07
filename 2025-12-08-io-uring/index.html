@@ -135,14 +135,18 @@ negligible.<a href="#fn3" class="footnote-ref" id="fnref3"
 role="doc-noteref"><sup>3</sup></a></li>
 <li>Portability is a hard requirement. io_uring is a Linux-specific
 feature that requires relatively recent kernels. If you need to support
-other OSes, Docker, or kernels older than 5.1, abstracting it or
-avoiding it might be simpler.</li>
+other OSes, Docker<a href="#fn4" class="footnote-ref" id="fnref4"
+role="doc-noteref"><sup>4</sup></a>, or kernels older than 5.1,
+abstracting it or avoiding it might be simpler.</li>
 </ul>
 <p>In summary, our evaluation suggests that io_uring is the best option
 for new systems and is also worth considering for many existing ones, as
 illustrated by <a
 href="https://www.phoronix.com/news/PostgreSQL-Lands-IO_uring">PostgreSQL’s</a>
 recent adoption of io_uring.</p>
+<p>Update: The paper has been discused on <a
+href="https://news.ycombinator.com/item?id=46517319">Hacker
+News</a>.</p>
 <section id="footnotes" class="footnotes footnotes-end-of-document"
 role="doc-endnotes">
 <hr />
@@ -155,6 +159,15 @@ TigerBeetle like io_uring so much.<a href="#fnref2"
 class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 <li id="fn3"><p>A few percent can still be gained by using io_uring.<a
 href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p>Docker Desktop blocks io_uring in containers for
+security reasons starting with version <a
+href="https://docs.docker.com/desktop/release-notes/#4420"> 4.42.0 </a>.
+The reason is that io_uring can bypass seccomp-style syscall filtering,
+making it difficult to sandbox safely. Properly constraining io_uring
+would require mechanisms beyond traditional seccomp, e.g. using <a
+href="https://dl.acm.org/doi/10.1145/3609021.3609304">eBPF</a>. (Thanks
+to HN user topspin for initiating this discussion.)<a href="#fnref4"
+class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 </ol>
 </section>
   </div>
